@@ -5,8 +5,8 @@ import asyncio
 from config import TOKEN
 
 from handlers.user import start, services, private, ads, support
-from handlers import global_back
-from handlers import global_no
+from handlers import global_back, global_no, global_photo
+
 
 async def main():
     bot = Bot(token=TOKEN)
@@ -21,6 +21,8 @@ async def main():
     # Глобальные должны быть ПОСЛЕДНИМИ
     dp.include_router(global_no.router)
     dp.include_router(global_back.router)
+    dp.include_router(global_photo.router)
+
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
