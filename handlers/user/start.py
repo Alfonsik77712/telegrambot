@@ -8,7 +8,4 @@ router = Router()
 @router.message(Command("start"))
 async def start_cmd(msg: types.Message):
     init_db()
-    await msg.answer(
-        "Привет! Я бот сервиса. Выберите действие:",
-        reply_markup=main_menu
-    )
+    await msg.answer("Главное меню:", reply_markup=main_menu)
