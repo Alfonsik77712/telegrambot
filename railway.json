@@ -1,0 +1,8 @@
+{
+  "mounts": [
+    {
+      "source": "db_volume",
+      "target": "/mnt/db"
+    }
+  ]
+}
