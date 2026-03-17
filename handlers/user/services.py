@@ -1,14 +1,9 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import (
-    ReplyKeyboardMarkup, KeyboardButton,
-    InlineKeyboardMarkup, InlineKeyboardButton
-)
-
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from states.order_state import OrderState
 from database.db import get_db
 from config import ADMIN_ID
-from keyboards.main_menu import main_menu
 
 router = Router()
 
@@ -27,15 +22,12 @@ services_menu = ReplyKeyboardMarkup(
 async def open_services(msg: types.Message):
     await msg.answer("Выберите услугу:", reply_markup=services_menu)
 
-@router.message(F.text.contains("₽"), ~F.text.contains("⬅️"))
+@router.message(F.text.regexp(r".+—\s*\d+₽"))
 async def choose_service(msg: types.Message, state: FSMContext):
     service_full = msg.text
-    try:
-        name_part, price_part = service_full.split("—")
-        service_name = name_part.strip()
-        price = int(price_part.replace("₽", "").strip())
-    except Exception:
-        return await msg.answer("Не удалось распознать услугу, попробуйте ещё раз.")
+    name_part, price_part = service_full.split("—")
+    service_name = name_part.strip()
+    price = int(price_part.replace("₽", "").strip())
 
     await state.update_data(service=service_name, price=price)
     await msg.answer("Опишите заказ:")
@@ -55,10 +47,11 @@ async def finish_order(msg: types.Message, state: FSMContext):
     cursor = db.cursor()
 
     cursor.execute("""
-        INSERT INTO orders (user_id, service, description, price, status, created_at)
-        VALUES (?, ?, ?, ?, ?, datetime('now'))
+        INSERT INTO orders (user_id, username, service, description, price, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
     """, (
         msg.from_user.id,
+        msg.from_user.username or f"id{msg.from_user.id}",
         data["service"],
         data["description"],
         data["price"],
@@ -71,9 +64,6 @@ async def finish_order(msg: types.Message, state: FSMContext):
 
     username = msg.from_user.username or f"id{msg.from_user.id}"
 
-    await msg.answer("Ваш заказ отправлен админу!")
-    await state.clear()
-
     text = (
         f"🆕 Новый заказ #{order_id}\n\n"
         f"🛠 Услуга: {data['service']}\n"
@@ -85,20 +75,12 @@ async def finish_order(msg: types.Message, state: FSMContext):
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(
-                    text="✅ Принять",
-                    callback_data=f"order_accept:{order_id}"
-                ),
-                InlineKeyboardButton(
-                    text="❌ Отклонить",
-                    callback_data=f"order_reject:{order_id}"
-                )
+                InlineKeyboardButton(text="✅ Принять", callback_data=f"order_accept:{order_id}"),
+                InlineKeyboardButton(text="❌ Отклонить", callback_data=f"order_reject:{order_id}")
             ]
         ]
     )
 
+    await msg.answer("Ваш заказ отправлен админу!")
+    await state.clear()
     await msg.bot.send_message(ADMIN_ID, text, reply_markup=kb)
-
-@router.message(F.text == "⬅️ Назад")
-async def go_back(msg: types.Message):
-    await msg.answer("Главное меню:", reply_markup=main_menu)
