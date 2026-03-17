@@ -8,6 +8,7 @@ from aiogram.types import (
 from states.order_state import OrderState
 from database.db import get_db
 from config import ADMIN_ID
+from keyboards.main_menu import main_menu
 
 router = Router()
 
@@ -68,6 +69,8 @@ async def finish_order(msg: types.Message, state: FSMContext):
     db.commit()
     db.close()
 
+    username = msg.from_user.username or f"id{msg.from_user.id}"
+
     await msg.answer("Ваш заказ отправлен админу!")
     await state.clear()
 
@@ -76,7 +79,7 @@ async def finish_order(msg: types.Message, state: FSMContext):
         f"🛠 Услуга: {data['service']}\n"
         f"💬 Описание: {data['description']}\n"
         f"💰 Цена: {data['price']}₽\n"
-        f"👤 Пользователь: {msg.from_user.id}\n"
+        f"👤 Пользователь: @{username}\n"
     )
 
     kb = InlineKeyboardMarkup(
@@ -95,3 +98,7 @@ async def finish_order(msg: types.Message, state: FSMContext):
     )
 
     await msg.bot.send_message(ADMIN_ID, text, reply_markup=kb)
+
+@router.message(F.text == "⬅️ Назад")
+async def go_back(msg: types.Message):
+    await msg.answer("Главное меню:", reply_markup=main_menu)
