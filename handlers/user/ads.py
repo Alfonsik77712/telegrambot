@@ -1,5 +1,4 @@
-from aiogram import Router, types
-from aiogram.filters import Text
+from aiogram import Router, types, F
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 router = Router()
@@ -15,6 +14,6 @@ ads_menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-@router.message(Text("📢 Реклама"))
+@router.message(F.text == "📢 Реклама")
 async def open_ads(msg: types.Message):
     await msg.answer("Выберите формат рекламы:", reply_markup=ads_menu)

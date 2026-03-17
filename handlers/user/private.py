@@ -1,5 +1,4 @@
-from aiogram import Router, types
-from aiogram.filters import Text
+from aiogram import Router, types, F
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 router = Router()
@@ -13,7 +12,6 @@ private_menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-# Открытие приват-меню
-@router.message(Text("🔐 Приват"))
+@router.message(F.text == "🔐 Приват")
 async def open_private(msg: types.Message):
     await msg.answer("Выберите вариант:", reply_markup=private_menu)

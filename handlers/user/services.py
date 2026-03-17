@@ -1,6 +1,9 @@
-from aiogram import Router, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
+from aiogram.types import (
+    ReplyKeyboardMarkup, KeyboardButton,
+    InlineKeyboardMarkup, InlineKeyboardButton
+)
 
 from states.order_state import OrderState
 from database.db import get_db
@@ -19,11 +22,11 @@ services_menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-@router.message(lambda m: m.text == "📦 Услуги")
+@router.message(F.text == "📦 Услуги")
 async def open_services(msg: types.Message):
     await msg.answer("Выберите услугу:", reply_markup=services_menu)
 
-@router.message(lambda m: "₽" in m.text and "⬅️" not in m.text)
+@router.message(F.text.contains("₽"), ~F.text.contains("⬅️"))
 async def choose_service(msg: types.Message, state: FSMContext):
     service_full = msg.text
     try:
